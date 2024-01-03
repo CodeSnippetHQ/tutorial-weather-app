@@ -3,12 +3,13 @@ import * as path from 'path'
 import bodyParser from 'body-parser'
 import fetch from 'node-fetch'
 import * as dotenv from 'dotenv'
+import { getCurrentWeather } from "./weather.js";
 
 // load environment variables from .env file
 dotenv.config();
 
 // initialize express app
-export const app = express()
+export const app = express();
 
 // parse application/json request bodies
 app.use(bodyParser.json())
@@ -17,9 +18,17 @@ app.use(bodyParser.json())
 app.use(express.static(path.join(process.cwd(), 'client')))
 
 // create http post endpoint that accepts user input
-app.post('/api/hello', async (req, res) => {
-    const { name } = req.body;
-    res.json({ data: `Hello, ${name}` });
+app.post('/api/current-weather', async (req, res) => {
+    const { lat, lon } = req.body;
+    const { city, icon, description, currentTemp, minTemp, maxTemp } = await getCurrentWeather(lat, lon);
+    return res.json({
+        city,
+        icon,
+        description,
+        currentTemp,
+        minTemp,
+        maxTemp,
+    });
 });
 
 // set the port to listen on
