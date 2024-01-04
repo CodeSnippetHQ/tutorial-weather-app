@@ -3,7 +3,7 @@ import * as path from 'path'
 import bodyParser from 'body-parser'
 import fetch from 'node-fetch'
 import * as dotenv from 'dotenv'
-import { getCurrentWeather } from "./weather.js";
+import { getCurrentWeather, HttpError } from "./weather.js";
 
 // load environment variables from .env file
 dotenv.config();
@@ -19,16 +19,31 @@ app.use(express.static(path.join(process.cwd(), 'client')))
 
 // create http post endpoint that accepts user input
 app.post('/api/current-weather', async (req, res) => {
-    const { lat, lon } = req.body;
-    const { city, icon, description, currentTemp, minTemp, maxTemp } = await getCurrentWeather(lat, lon);
-    return res.json({
-        city,
-        icon,
-        description,
-        currentTemp,
-        minTemp,
-        maxTemp,
-    });
+    try {
+        // extract lat and lon from request body
+        const { lat, lon } = req.body;
+
+        // request weather data from our server and destructure the response body
+        const { city, icon, description, currentTemp, minTemp, maxTemp } = await getCurrentWeather(lat, lon);
+
+        // return a json response with the weather data
+        return res.json({
+            city,
+            icon,
+            description,
+            currentTemp,
+            minTemp,
+            maxTemp,
+        });
+    } catch (err) {
+        // if the error is an instance of HttpError, return the status code and message
+        if (err instanceof HttpError) {
+            console.error(`Error getting weather data:`, err.status, err.message);
+            return res.status(err.status).json({ error: err.message });
+        }
+        // otherwise this is an unexpected error and we should return 500
+        return res.status(500).json({ error: err.message });
+    }
 });
 
 // set the port to listen on

@@ -4,7 +4,9 @@ function getLocation() {
     if (navigator.geolocation) {
         // prompt user to allow location access
         navigator.geolocation.getCurrentPosition((position) => {
+            // extract the coordinates
             const { latitude, longitude } = position.coords;
+
             // using the coordinates, send a request to our server
             getWeather(latitude, longitude).catch((err) => {
                 alert("Unable to get weather data");
@@ -30,6 +32,7 @@ async function getWeather(lat, lon) {
 
     // if the response is not ok, alert the user
     if (!res.ok) {
+        console.error('Error getting weather data', err);
         alert("Unable to get weather data");
         return;
     }
